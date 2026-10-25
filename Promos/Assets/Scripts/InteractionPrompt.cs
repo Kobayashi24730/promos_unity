@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class InteractionPrompt : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class InteractionPrompt : MonoBehaviour
     
     [Tooltip("O componente de Texto (TextMeshPro) que mostra a mensagem.")]
     public TextMeshProUGUI promptText;
+    private HashSet<object> _activePrompts = new HashSet<object>();
 
     private void Awake()
     {
@@ -25,19 +27,21 @@ public class InteractionPrompt : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Start(object requester)
     {
-        Hide();
+        Hide(requester);
     }
 
-    public void Show(string message)
+    public void Show(string message, object requester)
     {
+        if (!_activePrompts.Contains(requester)) _activePrompts.Add(requester);
         if (promptPanel != null) promptPanel.SetActive(true);
         if (promptText != null) promptText.text = message;
     }
 
-    public void Hide()
+    public void Hide(object requester)
     {
+        if (_activePrompts.Contains(requester)) _activePrompts.Remove(requester);
         if (promptPanel != null) promptPanel.SetActive(false);
     }
 }
