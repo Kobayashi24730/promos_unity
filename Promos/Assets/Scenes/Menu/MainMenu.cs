@@ -9,7 +9,14 @@ public class MainMenu : MonoBehaviour
     public GameObject SettingsUI;
     public float loadPlay = 3f;
 
-    public void StartGame()
+    // Executado automaticamente assim que a cena começa
+    private void Start()
+    {
+        ResetMenuState();
+    }
+
+    // Força o estado inicial limpo do menu
+    public void ResetMenuState()
     {
         if (LoadingScream != null)
         {
