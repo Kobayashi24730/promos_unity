@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu/menu.unity
     guid: 1deccf394b714234ab538e0411b59ceb
   - enabled: 1
-    path: Assets/Scenes/Forest Sample/Scenes/BrightDay.unity
+    path: Assets/Scenes/Word/Scenes/BrightDay.unity
     guid: c9e30e1e40e5f6a47aa6053500404e37
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

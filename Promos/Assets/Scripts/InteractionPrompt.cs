@@ -15,6 +15,11 @@ public class InteractionPrompt : MonoBehaviour
     public TextMeshProUGUI promptText;
     private HashSet<object> _activePrompts = new HashSet<object>();
 
+    private void Start()
+    {
+        // Força a mensagem a começar invisível/desativada ao iniciar a cena
+        gameObject.SetActive(false); // Ou esconde o componente de texto
+    }
     private void Awake()
     {
         if (Instance == null)

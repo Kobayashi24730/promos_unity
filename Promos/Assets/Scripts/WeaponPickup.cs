@@ -25,12 +25,22 @@ namespace StarterAssets
         public Vector3 rotationOffset = Vector3.zero;
         public Vector3 localScale = new Vector3(1f, 1f, 1f);
 
+        private void Start()
+        {
+            // Garante que o estado inicial começa limpo
+            _isPlayerNearby = false;
+            if (InteractionPrompt.Instance != null)
+            {
+                InteractionPrompt.Instance.Hide(this);
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (other.CompareTag("Player") || other.GetComponent<ThirdPersonController>() != null)
             {
                 _isPlayerNearby = true;
-                   if (InteractionPrompt.Instance != null)
+                if (InteractionPrompt.Instance != null)
                 {
                     InteractionPrompt.Instance.Show(message, this);
                 }
@@ -41,11 +51,22 @@ namespace StarterAssets
         {
             if (other.CompareTag("Player") || other.GetComponent<ThirdPersonController>() != null)
             {
-                _isPlayerNearby = false;
-                if (InteractionPrompt.Instance != null)
-                {
-                    InteractionPrompt.Instance.Hide(this);
-                }
+                HidePromptAndReset();
+            }
+        }
+
+        // Garante que se o objeto for desativado ou destruído, a mensagem nunca fica presa na tela
+        private void OnDisable()
+        {
+            HidePromptAndReset();
+        }
+
+        private void HidePromptAndReset()
+        {
+            _isPlayerNearby = false;
+            if (InteractionPrompt.Instance != null)
+            {
+                InteractionPrompt.Instance.Hide(this);
             }
         }
 
@@ -59,7 +80,6 @@ namespace StarterAssets
                 if (Keyboard.current != null)
                 {
                     string keyName = pickupKey.ToString().ToLower();
-                    // Usa 'as KeyControl' para converter o InputControl de forma segura
                     KeyControl keyControl = Keyboard.current[keyName] as KeyControl;
 
                     if (keyControl != null && keyControl.wasPressedThisFrame)
@@ -68,6 +88,7 @@ namespace StarterAssets
                     }
                 }
                 #endif
+
                 if (pressed)
                 {
                     PickUp();
@@ -77,10 +98,8 @@ namespace StarterAssets
 
         private void PickUp()
         {
-            if (InteractionPrompt.Instance != null)
-            {
-                InteractionPrompt.Instance.Hide(this);
-            }
+            // Oculta a mensagem imediatamente antes de alterar o estado da arma
+            HidePromptAndReset();
 
             if (weaponHolder != null)
             {
