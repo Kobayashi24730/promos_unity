@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-// ---------- Estrutura do que é salvo (vira o arquivo save.json) ----------
-
 [Serializable]
 public class ItemSalvo
 {
     public string nome;
     public int nivel;
     public int nivelMaximo;
+    public string categoria; 
 }
 
 [Serializable]
@@ -25,13 +24,7 @@ public class AbaSalva
 public class DadosDoJogo
 {
     public List<AbaSalva> abas = new List<AbaSalva>();
-
-    // Mais para frente você pode acrescentar aqui, por exemplo:
-    // public Vector3 posicaoDoPlayer;
-    // public List<string> inventario = new List<string>();
 }
-
-// ---------- Salvar / carregar (não precisa estar em nenhuma cena) ----------
 
 public static class SaveSystem
 {
@@ -41,8 +34,6 @@ public static class SaveSystem
     public static string CaminhoDoArquivo => Path.Combine(Application.persistentDataPath, NomeArquivo);
     public static bool ExisteSave => File.Exists(CaminhoDoArquivo);
 
-    // Os dados em memória. Todas as cenas leem e escrevem aqui.
-    // Se ainda não foram carregados, tenta ler o arquivo; se não houver, cria dados vazios.
     public static DadosDoJogo Atual
     {
         get
@@ -55,14 +46,12 @@ public static class SaveSystem
         }
     }
 
-    // Botão "Novo jogo": começa do zero e já grava o arquivo
     public static void NovoJogo()
     {
         _atual = new DadosDoJogo();
         Salvar();
     }
 
-    // Botão "Continuar": lê o arquivo. Retorna false se não existir ou estiver corrompido.
     public static bool Carregar()
     {
         if (!ExisteSave) return false;
@@ -83,7 +72,6 @@ public static class SaveSystem
         }
     }
 
-    // Botão "Salvar game" (e chamado automaticamente quando você melhora um item)
     public static void Salvar()
     {
         try
@@ -100,24 +88,5 @@ public static class SaveSystem
     {
         _atual = null;
         if (ExisteSave) File.Delete(CaminhoDoArquivo);
-    }
-
-    // ---------- Consultas para o player e o resto do jogo ----------
-
-    // Nível atual de um item pelo nome exato. Ex.: SaveSystem.GetNivel("Espada")
-    public static int GetNivel(string nomeItem)
-    {
-        foreach (AbaSalva aba in Atual.abas)
-            foreach (ItemSalvo item in aba.itens)
-                if (item.nome == nomeItem) return item.nivel;
-        return 0;
-    }
-
-    // Pontos que sobraram em uma aba. Ex.: SaveSystem.GetPontos("Armas")
-    public static int GetPontos(string nomeAba)
-    {
-        foreach (AbaSalva aba in Atual.abas)
-            if (aba.nome == nomeAba) return aba.pontos;
-        return 0;
     }
 }

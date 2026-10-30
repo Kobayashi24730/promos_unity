@@ -10,6 +10,12 @@ public class ItemMelhoriaData
     public string nomeItem = "Novo item";
     public int nivelAtual = 0;       // pontos já investidos neste item
     public int nivelMaximo = 5;
+
+    [Tooltip("Categoria ou tipo específico deste item (ex: Espada, Machado, Cajado, Escudo...).")]
+    public string categoriaItem = "Espada";
+
+    [Tooltip("Ícone específico deste item (opcional: se deixares vazio, o script tenta associar pelo tipo).")]
+    public Sprite iconeItem;
 }
 
 [Serializable]
@@ -21,7 +27,7 @@ public class AbaCategoriaData
     [Tooltip("Botão da aba (Armas, Armaduras...) na UI. O script liga o clique sozinho.")]
     public Button botaoAba;
 
-    [Tooltip("Texto específico que mostra os pontos desta aba na UI (ex: pontos_armas). Aceita TextMeshPro ou Text normal.")]
+    [Tooltip("Texto específico que mostra os pontos desta aba na UI. Aceita TextMeshPro ou Text normal.")]
     public Graphic textoPontosDaAba;
 
     public List<ItemMelhoriaData> itensDaAba = new List<ItemMelhoriaData>();
@@ -35,6 +41,10 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
     [Header("Abas e seus itens (configure no Inspector)")]
     public List<AbaCategoriaData> categorias = new List<AbaCategoriaData>();
 
+    [Header("Biblioteca Central de Ícones Automáticos")]
+    [Tooltip("Associe aqui os sprites para que o script os encontre automaticamente pelo nome da categoria do item.")]
+    public List<IconePorCategoria> bibliotecaIcones = new List<IconePorCategoria>();
+
     [Header("UI na cena")]
     [Tooltip("O objeto 'itens' onde os itens são criados.")]
     public Transform containerItens;
@@ -43,14 +53,18 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
     [Tooltip("Botão que gasta 1 ponto no item selecionado.")]
     public Button botaoMelhorar;
 
-    [Header("Nomes dos textos dentro do item")]
+    [Header("Nomes dos componentes dentro do item")]
     public string nomeTextoNome = "nameItem";
     public string nomeTextoPontos = "pontosItem";
+    [Tooltip("Nome do GameObject filho no prefab que contém o componente Image do ícone.")]
+    public string nomeObjetoIcone = "imgItem";
 
-    [Header("Cores")]
-    public Color corAbaNormal = Color.white;
-    public Color corAbaAtiva = new Color(0.96f, 0.82f, 0.55f);
-    public Color corItemNormal = Color.white;
+    [Header("Cores das Abas")]
+    public Color corAbaNormal = new Color(1f, 1f, 1f, 0f); // Transparente/Apagado por padrão
+    public Color corAbaAtiva = new Color(0.96f, 0.82f, 0.55f); // Dourado do Véu de Ferro
+
+    [Header("Cores dos Itens")]
+    public Color corItemNormal = new Color(1f, 1f, 1f, 0.2f);
     public Color corItemSelecionado = new Color(0.96f, 0.82f, 0.55f);
 
     private int indiceAbaAtual = -1;
@@ -140,15 +154,17 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
         Redesenhar();
     }
 
-    public void AdicionarItem(int indiceAba, string nome, int nivelMaximo = 5)
+    public void AdicionarItem(int indiceAba, string nome, string categoriaTipo = "Espada", int nivelMaximo = 5, Sprite icone = null)
     {
         if (indiceAba < 0 || indiceAba >= categorias.Count) return;
 
         categorias[indiceAba].itensDaAba.Add(new ItemMelhoriaData
         {
             nomeItem = nome,
+            categoriaItem = categoriaTipo,
             nivelAtual = 0,
-            nivelMaximo = nivelMaximo
+            nivelMaximo = nivelMaximo,
+            iconeItem = icone
         });
 
         SalvarProgresso();
@@ -158,7 +174,7 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
     public void AdicionarItemNaAbaAtiva()
     {
         if (indiceAbaAtual < 0) return;
-        AdicionarItem(indiceAbaAtual, "Novo item " + contadorNovosItens++);
+        AdicionarItem(indiceAbaAtual, "Novo item " + contadorNovosItens++, "Espada", 5, null);
     }
 
     public void AdicionarPontos(int indiceAba, int quantidade)
@@ -168,6 +184,23 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
         categorias[indiceAba].pontosDisponiveisNaAba += quantidade;
         SalvarProgresso();
         if (indiceAba == indiceAbaAtual) AtualizarTextoPontos();
+    }
+
+    // Método que descobre o ícone automaticamente com base no nome/ID do item salvo
+    private Sprite ObterIconeDoItem(string nomeDoItem)
+    {
+        // Podes normalizar o nome para minúsculas para evitar erros de digitação (ex: "Machado" vira "machado")
+        string chave = nomeDoItem.ToLower().Trim();
+
+        foreach (var entry in bibliotecaIcones)
+        {
+            if (entry.nomeCategoria.ToLower() == chave)
+            {
+                return entry.icone;
+            }
+        }
+        
+        return null; // Retorna nulo se não encontrar (ou podes colocar um ícone padrão de interrogação)
     }
 
     // ---------------------------- SAVE ----------------------------------
@@ -192,12 +225,15 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
                     {
                         nomeItem = s.nome,
                         nivelAtual = s.nivel,
-                        nivelMaximo = s.nivelMaximo
+                        nivelMaximo = s.nivelMaximo,
+                        categoriaItem = string.IsNullOrEmpty(s.categoria) ? "Espada" : s.categoria
                     });
                 }
                 else
                 {
                     item.nivelAtual = s.nivel;
+                    if (!string.IsNullOrEmpty(s.categoria))
+                        item.categoriaItem = s.categoria;
                 }
             }
         }
@@ -221,7 +257,8 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
                 {
                     nome = item.nomeItem,
                     nivel = item.nivelAtual,
-                    nivelMaximo = item.nivelMaximo
+                    nivelMaximo = item.nivelMaximo,
+                    categoria = item.categoriaItem // <-- Guarda a categoria individual no JSON
                 });
             }
 
@@ -268,6 +305,28 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
 
             PreencherTextos(ui.transform, dado.nomeItem, "Pontos: " + dado.nivelAtual + "/" + dado.nivelMaximo);
 
+            // Configura o Ícone do item com base na categoria individual do item
+            Transform tIcone = ui.transform.Find(nomeObjetoIcone);
+            if (tIcone != null)
+            {
+                Image imgIcone = tIcone.GetComponent<Image>();
+                if (imgIcone != null)
+                {
+                    // Prioridade 1: Ícone próprio do item. Prioridade 2: Ícone mapeado pela categoria do item.
+                    Sprite spriteParaUsar = dado.iconeItem != null ? dado.iconeItem : ObterIconeDoItem(dado.categoriaItem);
+
+                    if (spriteParaUsar != null)
+                    {
+                        imgIcone.gameObject.SetActive(true);
+                        imgIcone.sprite = spriteParaUsar;
+                    }
+                    else
+                    {
+                        imgIcone.gameObject.SetActive(false);
+                    }
+                }
+            }
+
             Graphic fundo = ui.GetComponent<Graphic>();
             if (fundo != null)
                 fundo.color = (i == aba.selecionado) ? corItemSelecionado : corItemNormal;
@@ -292,15 +351,13 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
 
                 if (i == indiceAbaAtual)
                 {
-                    // Aba ativa: define a cor fixa de selecionada/ativa para o estado normal
                     cb.normalColor = corAbaAtiva;
-                    cb.highlightedColor = corAbaAtiva; // Mantém a cor ativa ao passar o rato se já estiver selecionada
+                    cb.highlightedColor = corAbaAtiva;
                 }
                 else
                 {
-                    // Aba apagada/inativa: usa a cor normal e deixa o rato acender com a cor de destaque
                     cb.normalColor = corAbaNormal;
-                    cb.highlightedColor = corAbaAtiva; // Cor quando o rato passa por cima
+                    cb.highlightedColor = corAbaAtiva;
                 }
 
                 botao.colors = cb;
@@ -314,7 +371,6 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
 
         AbaCategoriaData aba = categorias[indiceAbaAtual];
         
-        // Atualiza o texto específico configurado para esta aba
         if (aba.textoPontosDaAba != null)
         {
             SetTexto(aba.textoPontosDaAba, "" + aba.pontosDisponiveisNaAba);
@@ -360,4 +416,12 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
         if (alvo is TMP_Text tmp) tmp.text = valor;
         else if (alvo is Text legado) legado.text = valor;
     }
+}
+
+// Estrutura auxiliar para mapear categorias de itens aos respetivos ícones no Inspector
+[Serializable]
+public struct IconePorCategoria
+{
+    public string nomeCategoria; // Ex: "Espada", "Machado", "Cajado"
+    public Sprite icone;        // O sprite correspondente
 }
