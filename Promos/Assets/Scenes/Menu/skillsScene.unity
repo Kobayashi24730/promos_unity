@@ -2309,6 +2309,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 491857756}
+  - component: {fileID: 491857758}
+  - component: {fileID: 491857757}
   m_Layer: 0
   m_Name: itens
   m_TagString: Untagged
@@ -2331,11 +2333,49 @@ RectTransform:
   - {fileID: 2019518047}
   m_Father: {fileID: 794899242}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: -53}
+  m_SizeDelta: {x: 501, y: 18}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &491857757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 491857755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 0
+--- !u!114 &491857758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 491857755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GridLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 300, y: 18}
+  m_Spacing: {x: 5, y: 10}
+  m_Constraint: 0
+  m_ConstraintCount: 2
 --- !u!1 &526679377
 GameObject:
   m_ObjectHideFlags: 0
@@ -4180,15 +4220,15 @@ MonoBehaviour:
     botaoAba: {fileID: 1139178309}
     textoPontosDaAba: {fileID: 1269731634}
     itensDaAba: []
-  - nomeCategoria: 
+  - nomeCategoria: Consumiveis
     pontosDisponiveisNaAba: 0
-    botaoAba: {fileID: 0}
-    textoPontosDaAba: {fileID: 0}
+    botaoAba: {fileID: 765737141}
+    textoPontosDaAba: {fileID: 1902902140}
     itensDaAba: []
-  - nomeCategoria: 
+  - nomeCategoria: Materiais
     pontosDisponiveisNaAba: 0
-    botaoAba: {fileID: 0}
-    textoPontosDaAba: {fileID: 0}
+    botaoAba: {fileID: 864222121}
+    textoPontosDaAba: {fileID: 1531133202}
     itensDaAba: []
   bibliotecaIcones:
   - nomeCategoria: Machado
@@ -12066,6 +12106,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 491857756}
     m_Modifications:
     - target: {fileID: 211243937349440026, guid: bacc310bc39178948acf1439493f686f, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 211243937349440026, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 43
       objectReference: {fileID: 0}
@@ -12098,6 +12142,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
     - target: {fileID: 1141207250570025424, guid: bacc310bc39178948acf1439493f686f, type: 3}
+      propertyPath: m_TextWrappingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1141207250570025424, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
       objectReference: {fileID: 0}
@@ -12107,7 +12155,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4810895646645254508, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -73
+      value: -124
       objectReference: {fileID: 0}
     - target: {fileID: 4810895646645254508, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -12123,27 +12171,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 170
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 25
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12175,11 +12223,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -205
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5527321730050094588, guid: bacc310bc39178948acf1439493f686f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
