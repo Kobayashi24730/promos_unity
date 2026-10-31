@@ -207,36 +207,42 @@ public class GerenciadorMelhoriasDinamico : MonoBehaviour
 
     private void AplicarSave()
     {
+        if (SaveSystem.Atual == null || SaveSystem.Atual.abas == null) return;
+
         DadosDoJogo dados = SaveSystem.Atual;
 
         foreach (AbaCategoriaData aba in categorias)
         {
+            // Encontra a aba correspondente no save
             AbaSalva salva = dados.abas.Find(a => a.nome == aba.nomeCategoria);
             if (salva == null) continue;
 
             aba.pontosDisponiveisNaAba = salva.pontos;
 
+            // Opcional: Limpa a lista atual para recriar com base estrita no save, 
+            // evitando duplicações ao recarregar a cena.
+            aba.itensDaAba.Clear();
+
             foreach (ItemSalvo s in salva.itens)
             {
-                ItemMelhoriaData item = aba.itensDaAba.Find(i => i.nomeItem == s.nome);
-                if (item == null)
+                // Validação para evitar itens sem nome no save
+                if (string.IsNullOrEmpty(s.nome)) continue;
+
+                // Cria e adiciona o item diretamente garantindo que puxa os dados corretos do JSON
+                ItemMelhoriaData novoItem = new ItemMelhoriaData
                 {
-                    aba.itensDaAba.Add(new ItemMelhoriaData
-                    {
-                        nomeItem = s.nome,
-                        nivelAtual = s.nivel,
-                        nivelMaximo = s.nivelMaximo,
-                        categoriaItem = string.IsNullOrEmpty(s.categoria) ? "Espada" : s.categoria
-                    });
-                }
-                else
-                {
-                    item.nivelAtual = s.nivel;
-                    if (!string.IsNullOrEmpty(s.categoria))
-                        item.categoriaItem = s.categoria;
-                }
+                    nomeItem = s.nome,
+                    nivelAtual = s.nivel,
+                    nivelMaximo = s.nivelMaximo,
+                    categoriaItem = string.IsNullOrEmpty(s.categoria) ? "Espada" : s.categoria
+                };
+                
+                aba.itensDaAba.Add(novoItem);
             }
         }
+        
+        // Redesenha a interface visual após atualizar os dados
+        Redesenhar();
     }
 
     private void SalvarProgresso()
