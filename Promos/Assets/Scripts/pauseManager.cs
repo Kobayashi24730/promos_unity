@@ -1,57 +1,82 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 
 public class pauseManager: MonoBehaviour
 {
-    public Transform canvasTransform;
-    public GameObject saveGamePrefab;
-    public GameObject loadGamePrefab;
-    public GameObject menuPausePrincipal;
+    public GameObject canvasMenu; //? Painel principal do menu onde aparecerar a toast.
+    public GameObject loadGamePrefab; //? prefab do painel do load.
+    public Transform scrollViewLoad; //? Scroll Content referente do painel do laod (loadGamePrefab).
 
-    private GameObject painelSaveInstance;
-    private GameObject painelLoadInstance;
+    public GameObject itenPrefab; //? iten que mostrara as infos do save para cada save;
 
+    private readonly List<GameObject> itens = new List<GameObject>(); //? Lista para gurdar cada save feito pelo usuario.
     public void Start()
     {
-        if (saveGamePrefab != null && saveGamePrefab.scene.IsValid()) saveGamePrefab.SetActive(false);
         if (loadGamePrefab != null && loadGamePrefab.scene.IsValid()) loadGamePrefab.SetActive(false);
+        if (itenPrefab != null && itenPrefab.scene.IsValid()) itenPrefab.SetActive(false);
     }
 
-    public void openMenuSave()
+    public void openSave()
     {
-        
+        if (loadGamePrefab != null) loadGamePrefab.SetActive(false);
+        desenharSave();
     }
 
     public void openMenuLoad()
     {
-        if (saveMenu != null) saveMenu.SetActive(false);
-        if (loadMenu != null) loadMenu.SetActive(true);
+        if (loadGamePrefab != null) loadGamePrefab.SetActive(true);
+        atualizarListaSave();
     }
+
+    public void closeMenuLoad() {if (loadGamePrefab != null) loadGamePrefab.SetActive(false);}
 
     public void atualizarListaSave()
     {
         limparListaSave();
-        if (itemPrefab == null || contentSave == null) return;
-
-        for (int i = 0; i < 3; i++)
+        if (scrollViewLoad == null || itenPrefab == null)
         {
-            GameObject novoItem = Instantiate(itemPrefab, contentSave, false);
-            novoItem.SetActive(true);
-            saves.Add(novoItem);
+            Debug.LogWarning("Content ou Prefab do item não atribuídos!");
+            return;
         }
-        
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentSave as RectTransform);
+
+        int nuberSaves = 3;
+        for (int i=0; i < nuberSaves; i++)
+        {
+            GameObject novoItem = Instantiate(itenPrefab, scrollViewLoad, false);
+            novoItem.SetActive(true);
+            itens.Add(novoItem);
+            TMP_Text textoTitulo = novoItem.GetComponentInChildren<TMP_Text>();
+            if (textoTitulo != null)
+            {
+                textoTitulo.text = $"Save Slot {i + 1} - Jogo Salvo";
+            }
+        }
+
+        RectTransform rt = scrollViewLoad as RectTransform;
+        if (rt != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+        }
     }
 
     public void limparListaSave()
     {
-        foreach (GameObject go in saves)
+        foreach (GameObject iten in itens)
         {
-            if (go != null) continue;
+            if (iten != null)
+            {
+                Destroy(iten);
+            }
         }
-        saves.Clear();
+        itens.Clear();
+    }
+
+    public void desenharSave()
+    {
+        
     }
 
     public void ExitGame()
