@@ -1,0 +1,40 @@
+{
+    "habilidades": [
+        {
+            "id": "vida_vigor_ferro",
+            "nomeHabilidade": "Vigor de Ferro",
+            "categoria": "Vida",
+            "requer": "",
+            "custoInicial": 3,
+            "aumentoCusto": 2,
+            "nivelMaximo": 5
+        },
+        {
+            "id": "magica_chama_sombria",
+            "nomeHabilidade": "Chama Sombria",
+            "categoria": "Magica",
+            "requer": "",
+            "custoInicial": 3,
+            "aumentoCusto": 2,
+            "nivelMaximo": 5
+        },
+        {
+            "id": "arma_lamina_pesada",
+            "nomeHabilidade": "Lâmina Pesada",
+            "categoria": "Armas",
+            "requer": "",
+            "custoInicial": 3,
+            "aumentoCusto": 2,
+            "nivelMaximo": 5
+        },
+        {
+            "id": "necro_invocar_esqueleto",
+            "nomeHabilidade": "Invocar Esqueleto",
+            "categoria": "Necromancer",
+            "requer": "",
+            "custoInicial": 3,
+            "aumentoCusto": 2,
+            "nivelMaximo": 5
+        }
+    ]
+}

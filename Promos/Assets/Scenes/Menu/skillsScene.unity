@@ -3715,12 +3715,13 @@ MonoBehaviour:
   - nomeCategoria: Armas
     containerItens: {fileID: 2100452503}
     prefabEspecifico: {fileID: 385312843}
-  - nomeCategoria: Necro
+  - nomeCategoria: Necromancer
     containerItens: {fileID: 1139131695}
     prefabEspecifico: {fileID: 1820265678}
   nomeTextoNome: nameItem
   nomeTextoCusto: pontosItem
   nomeObjetoTecla: tecla
+  catalogoJson: {fileID: 4900000, guid: 988b956176db4ef448ee9ef1e44409f7, type: 3}
   habilidades: []
 --- !u!1001 &686004400
 PrefabInstance:

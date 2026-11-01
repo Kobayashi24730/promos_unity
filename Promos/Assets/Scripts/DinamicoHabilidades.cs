@@ -44,14 +44,22 @@ public class CategoriaContainer
 {
     [Tooltip("Nome exato da categoria (ex: Vida, Magica, Armas, Necromancer).")]
     public string nomeCategoria;
-    
-    [Tooltip("O Content correspondente à Scroll View desta categoria.")]
+
+    [Tooltip("O objeto 'items' (o que tem o Grid Layout) desta Scroll View.")]
     public Transform containerItens;
 
     [Tooltip("Prefab específico para os itens desta categoria (deve conter um filho chamado 'tecla').")]
     public GameObject prefabEspecifico;
 }
 
+// Formato do arquivo habilidades.json: { "habilidades": [ { ... }, { ... } ] }
+[Serializable]
+public class CatalogoHabilidades
+{
+    public List<HabilidadeUI> habilidades = new List<HabilidadeUI>();
+}
+
+// GameObject: DinamicoHabilidades
 public class DinamicoHabilidades : MonoBehaviour
 {
     [Header("Pontos")]
@@ -60,7 +68,7 @@ public class DinamicoHabilidades : MonoBehaviour
     public string formatoPontos = "PONTOS DE HABILIDADE {0}";
 
     [Header("Containers e Prefabs por Categoria")]
-    [Tooltip("Configure o Content e o Prefab específico para cada categoria/scroll.")]
+    [Tooltip("Configure o container e o prefab específico para cada categoria/scroll.")]
     public List<CategoriaContainer> containersCategorias = new List<CategoriaContainer>();
 
     [Header("Nomes dos objetos no prefab")]
@@ -69,27 +77,48 @@ public class DinamicoHabilidades : MonoBehaviour
     public string nomeObjetoTecla = "tecla";
 
     [Header("Habilidades")]
+    [Tooltip("Arquivo habilidades.json com todas as habilidades do jogo. É lido quando a lista abaixo está vazia.")]
+    public TextAsset catalogoJson;
+    [Tooltip("Cadastro manual. Se tiver itens aqui, o catálogo JSON é ignorado.")]
     public List<HabilidadeUI> habilidades = new List<HabilidadeUI>();
 
     private readonly List<GameObject> itensGerados = new List<GameObject>();
 
     void Start()
     {
-        // Desativa todos os prefabs configurados nas categorias para servirem apenas de molde
+        // Desativa os moldes que estão na cena (só as cópias devem aparecer)
         foreach (var cat in containersCategorias)
         {
             if (cat.prefabEspecifico != null && cat.prefabEspecifico.scene.IsValid())
                 cat.prefabEspecifico.SetActive(false);
         }
 
+        CarregarCatalogo();
         ValidarConfiguracao();
         Atualizar();
+    }
+
+    // Se a lista do Inspector está vazia, lê as habilidades do arquivo JSON
+    private void CarregarCatalogo()
+    {
+        if (habilidades.Count > 0 || catalogoJson == null) return;
+
+        try
+        {
+            CatalogoHabilidades catalogo = JsonUtility.FromJson<CatalogoHabilidades>(catalogoJson.text);
+            if (catalogo != null && catalogo.habilidades != null)
+                habilidades = catalogo.habilidades;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Falha ao ler o catálogo de habilidades (" + catalogoJson.name + "): " + e.Message, this);
+        }
     }
 
     private void ValidarConfiguracao()
     {
         if (habilidades.Count == 0)
-            Debug.LogWarning("DinamicoHabilidades: a lista 'Habilidades' está vazia.", this);
+            Debug.LogWarning("DinamicoHabilidades: nenhuma habilidade cadastrada (lista vazia e sem catálogo JSON).", this);
 
         HashSet<string> ids = new HashSet<string>();
         foreach (HabilidadeUI hab in habilidades)
@@ -103,6 +132,13 @@ public class DinamicoHabilidades : MonoBehaviour
             CategoriaContainer c = ObterDadosCategoria(hab.categoria);
             if (c == null || c.containerItens == null || c.prefabEspecifico == null)
                 Debug.LogWarning("Habilidade '" + hab.id + "': a categoria '" + hab.categoria + "' não existe ou está sem Container/Prefab.", this);
+        }
+
+        // ids que estão no save mas não existem no catálogo (nunca vão aparecer na tela)
+        foreach (string idSalvo in SaveSystem.Atual.habilidades.habilidadesDesbloqueadas)
+        {
+            if (!habilidades.Exists(h => h.id == idSalvo))
+                Debug.LogWarning("O save tem a habilidade '" + idSalvo + "', mas ela não está cadastrada (confira o id).", this);
         }
     }
 
@@ -165,26 +201,21 @@ public class DinamicoHabilidades : MonoBehaviour
 
         LimparItens();
 
-        // Cria as habilidades separando-as por categoria nos respetivos containers e com o prefab próprio
+        // Cria as habilidades separadas por categoria, cada uma no seu container e com o prefab próprio
         foreach (HabilidadeUI hab in habilidades)
         {
             CategoriaContainer dadosCat = ObterDadosCategoria(hab.categoria);
             if (dadosCat != null && dadosCat.containerItens != null && dadosCat.prefabEspecifico != null)
-            {
                 CriarItemNoContainer(hab, pontos, dadosCat.containerItens, dadosCat.prefabEspecifico);
-            }
         }
 
-        // Reconstrói o layout de todos os containers ativos
+        // Reconstrói o layout de todos os containers
         foreach (var cat in containersCategorias)
         {
-            if (cat.containerItens != null)
-            {
-                RectTransform rt = cat.containerItens as RectTransform;
-                if (rt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
-            }
+            RectTransform rt = cat.containerItens as RectTransform;
+            if (rt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
         }
-        
+
         Debug.Log("[Habilidades] configuradas: " + habilidades.Count + " | itens criados: " + itensGerados.Count);
     }
 
@@ -219,33 +250,24 @@ public class DinamicoHabilidades : MonoBehaviour
             hab.nomeHabilidade + " (Nv. " + nivel + ")",
             NoMaximo(hab) ? "MÁXIMO" : "Custo: " + CalcularCusto(hab));
 
+        // o item em si não é clicável: quem compra é a tecla
         Button botaoItem = ui.GetComponent<Button>();
         if (botaoItem == null) botaoItem = ui.GetComponentInChildren<Button>();
         if (botaoItem != null)
         {
             botaoItem.onClick.RemoveAllListeners();
-            botaoItem.interactable = false; 
+            botaoItem.interactable = false;
         }
 
         Transform tTecla = ui.transform.Find(nomeObjetoTecla);
-        if (tTecla != null)
+        if (tTecla == null) return;
+
+        tTecla.gameObject.SetActive(podeComprar);
+
+        if (podeComprar)
         {
-            tTecla.gameObject.SetActive(podeComprar);
-
-            if (podeComprar)
-            {
-                Button botaoTecla = tTecla.GetComponent<Button>();
-                if (botaoTecla == null)
-                {
-                    botaoTecla = tTecla.gameObject.AddComponent<Button>();
-                }
-
-                botaoTecla.interactable = true;
-                
-                HabilidadeUI atual = hab;
-                botaoTecla.onClick.RemoveAllListeners();
-                botaoTecla.onClick.AddListener(() => MelhorarHabilidade(atual));
-            }
+            HabilidadeUI atual = hab;
+            UIUtil.TornarClicavel(tTecla.gameObject, () => MelhorarHabilidade(atual));
         }
     }
 
@@ -277,6 +299,4 @@ public class DinamicoHabilidades : MonoBehaviour
         if (alvo is TMP_Text tmp) tmp.text = valor;
         else if (alvo is Text legado) legado.text = valor;
     }
-
-
 }
