@@ -59,12 +59,6 @@ public class DinamicoMelhorias : MonoBehaviour
     public string nomeTextoPontos = "pontosItem";
     public string nomeObjetoIcone = "imgItem";
 
-    [Header("Cores")]
-    public Color corAbaNormal = new Color(1f, 1f, 1f, 0f);
-    public Color corAbaAtiva = new Color(0.96f, 0.82f, 0.55f);
-    public Color corItemNormal = new Color(1f, 1f, 1f, 0.2f);
-    public Color corItemSelecionado = new Color(0.96f, 0.82f, 0.55f);
-
     private int abaAtual = -1;
     private int contadorNovosItens = 1;
     private readonly List<GameObject> itensGerados = new List<GameObject>();
@@ -280,9 +274,6 @@ public class DinamicoMelhorias : MonoBehaviour
         AplicarIcone(ui.transform, dado);
         AtualizarTeclaDoItem(ui.transform, abaTemPontos);
 
-        Graphic fundo = ui.GetComponent<Graphic>();
-        if (fundo != null) fundo.color = selecionado ? corItemSelecionado : corItemNormal;
-
         return ui;
     }
 
@@ -337,8 +328,6 @@ public class DinamicoMelhorias : MonoBehaviour
             if (botao == null) continue;
 
             ColorBlock cb = botao.colors;
-            cb.normalColor = (i == abaAtual) ? corAbaAtiva : corAbaNormal;
-            cb.highlightedColor = corAbaAtiva;
             botao.colors = cb;
         }
     }

@@ -15,7 +15,10 @@ public class HabilidadeUI
     [Tooltip("Nome que aparece no item gerado.")]
     public string nomeHabilidade = "Habilidade";
 
-    [Tooltip("Id de OUTRA habilidade que precisa estar desbloqueada antes. Deixe VAZIO se não houver (não é um número).")]
+    [Tooltip("Categoria ou Aba correspondente (ex: Vida, Magica, Armas, Necromancer).")]
+    public string categoria = "Vida";
+
+    [Tooltip("Id de OUTRA habilidade que precisa estar desbloqueada antes. Deixe VAZIO se não houver.")]
     public string requer = "";
 
     [Tooltip("Custo da primeira compra.")]
@@ -27,17 +30,28 @@ public class HabilidadeUI
     [Tooltip("Nível máximo. 0 = ilimitado.")]
     public int nivelMaximo = 0;
 
-    [Tooltip("Executa só na primeira compra (efeitos, som...).")]
+    [Tooltip("Executa só na primeira compra.")]
     public UnityEvent aoDesbloquear;
 
-    [Tooltip("Executa a cada nível comprado, inclusive o primeiro.")]
+    [Tooltip("Executa a cada nível comprado.")]
     public UnityEvent aoMelhorar;
 
     [NonSerialized] public Button botaoGerado;
 }
 
-// GameObject: DinamicoHabilidades
-// Lista de habilidades compráveis com pontos de habilidade. Salva nível e desbloqueio no save.
+[Serializable]
+public class CategoriaContainer
+{
+    [Tooltip("Nome exato da categoria (ex: Vida, Magica, Armas, Necromancer).")]
+    public string nomeCategoria;
+    
+    [Tooltip("O Content correspondente à Scroll View desta categoria.")]
+    public Transform containerItens;
+
+    [Tooltip("Prefab específico para os itens desta categoria (deve conter um filho chamado 'tecla').")]
+    public GameObject prefabEspecifico;
+}
+
 public class DinamicoHabilidades : MonoBehaviour
 {
     [Header("Pontos")]
@@ -45,15 +59,9 @@ public class DinamicoHabilidades : MonoBehaviour
     [Tooltip("{0} vira o número de pontos.")]
     public string formatoPontos = "PONTOS DE HABILIDADE {0}";
 
-    [Header("Container e prefab")]
-    public Transform containerItens;
-    [Tooltip("Molde de cada habilidade. Deve ter um filho chamado 'tecla'.")]
-    [FormerlySerializedAs("profabeItenUI")]
-    public GameObject prefabItenUI;
-
-    [Header("Cores")]
-    public Color corBloqueada = new Color(0.5f, 0.5f, 0.5f, 1f);
-    public Color corDesbloqueada = Color.white;
+    [Header("Containers e Prefabs por Categoria")]
+    [Tooltip("Configure o Content e o Prefab específico para cada categoria/scroll.")]
+    public List<CategoriaContainer> containersCategorias = new List<CategoriaContainer>();
 
     [Header("Nomes dos objetos no prefab")]
     public string nomeTextoNome = "nameItem";
@@ -67,29 +75,37 @@ public class DinamicoHabilidades : MonoBehaviour
 
     void Start()
     {
-        if (prefabItenUI != null && prefabItenUI.scene.IsValid())
-            prefabItenUI.SetActive(false);
+        // Desativa todos os prefabs configurados nas categorias para servirem apenas de molde
+        foreach (var cat in containersCategorias)
+        {
+            if (cat.prefabEspecifico != null && cat.prefabEspecifico.scene.IsValid())
+                cat.prefabEspecifico.SetActive(false);
+        }
 
-        ValidarRequisitos();
+        ValidarConfiguracao();
         Atualizar();
     }
 
-    // Avisa se 'Requer' aponta para um id que não existe (a habilidade ficaria bloqueada para sempre)
-    private void ValidarRequisitos()
+    private void ValidarConfiguracao()
     {
+        if (habilidades.Count == 0)
+            Debug.LogWarning("DinamicoHabilidades: a lista 'Habilidades' está vazia.", this);
+
+        HashSet<string> ids = new HashSet<string>();
         foreach (HabilidadeUI hab in habilidades)
         {
+            if (string.IsNullOrEmpty(hab.id) || !ids.Add(hab.id))
+                Debug.LogWarning("Habilidade com id vazio ou repetido: '" + hab.id + "'.", this);
+
             if (!string.IsNullOrEmpty(hab.requer) && !habilidades.Exists(o => o.id == hab.requer))
-            {
-                Debug.LogWarning("Habilidade '" + hab.id + "': o campo Requer ('" + hab.requer +
-                                 "') não é o id de nenhuma habilidade. Deixe vazio se não há requisito.", this);
-            }
+                Debug.LogWarning("Habilidade '" + hab.id + "': Requer ('" + hab.requer + "') não é o id de nenhuma habilidade.", this);
+
+            CategoriaContainer c = ObterDadosCategoria(hab.categoria);
+            if (c == null || c.containerItens == null || c.prefabEspecifico == null)
+                Debug.LogWarning("Habilidade '" + hab.id + "': a categoria '" + hab.categoria + "' não existe ou está sem Container/Prefab.", this);
         }
     }
 
-    // ------------------------- ações -------------------------
-
-    // Compra o próximo nível (a primeira compra também desbloqueia)
     public void MelhorarHabilidade(HabilidadeUI hab)
     {
         HabilidadesData dados = SaveSystem.Atual.habilidades;
@@ -109,7 +125,6 @@ public class DinamicoHabilidades : MonoBehaviour
         Atualizar();
     }
 
-    // Dá pontos de habilidade (ex.: ao subir de nível)
     public void AdicionarPontosHabilidade(int quantidade)
     {
         SaveSystem.Atual.habilidades.pontosHabilidadeDisponiveis += quantidade;
@@ -120,13 +135,9 @@ public class DinamicoHabilidades : MonoBehaviour
     [ContextMenu("Teste: dar 3 pontos de habilidade")]
     private void TesteDarPontos() { AdicionarPontosHabilidade(3); }
 
-    // ------------------------- regras -------------------------
-
     private bool PodeMelhorar(HabilidadeUI hab, int pontos)
     {
         bool jaTem = SaveSystem.HabilidadeDesbloqueada(hab.id);
-
-        // o requisito só vale para a primeira compra
         bool requisito = jaTem || string.IsNullOrEmpty(hab.requer) || SaveSystem.HabilidadeDesbloqueada(hab.requer);
         if (!requisito) return false;
 
@@ -145,8 +156,6 @@ public class DinamicoHabilidades : MonoBehaviour
         return hab.custoInicial + SaveSystem.GetNivelHabilidade(hab.id) * hab.aumentoCusto;
     }
 
-    // ------------------------- UI -------------------------
-
     public void Atualizar()
     {
         int pontos = SaveSystem.Atual.habilidades.pontosHabilidadeDisponiveis;
@@ -155,13 +164,34 @@ public class DinamicoHabilidades : MonoBehaviour
             SetTexto(textoPontosHabilidade, string.Format(formatoPontos, pontos));
 
         LimparItens();
-        if (prefabItenUI == null || containerItens == null) return;
 
+        // Cria as habilidades separando-as por categoria nos respetivos containers e com o prefab próprio
         foreach (HabilidadeUI hab in habilidades)
-            CriarItem(hab, pontos);
+        {
+            CategoriaContainer dadosCat = ObterDadosCategoria(hab.categoria);
+            if (dadosCat != null && dadosCat.containerItens != null && dadosCat.prefabEspecifico != null)
+            {
+                CriarItemNoContainer(hab, pontos, dadosCat.containerItens, dadosCat.prefabEspecifico);
+            }
+        }
 
-        RectTransform rt = containerItens as RectTransform;
-        if (rt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+        // Reconstrói o layout de todos os containers ativos
+        foreach (var cat in containersCategorias)
+        {
+            if (cat.containerItens != null)
+            {
+                RectTransform rt = cat.containerItens as RectTransform;
+                if (rt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+            }
+        }
+        
+        Debug.Log("[Habilidades] configuradas: " + habilidades.Count + " | itens criados: " + itensGerados.Count);
+    }
+
+    private CategoriaContainer ObterDadosCategoria(string categoria)
+    {
+        return containersCategorias.Find(c =>
+            string.Equals(c.nomeCategoria, categoria, StringComparison.OrdinalIgnoreCase));
     }
 
     private void LimparItens()
@@ -169,15 +199,15 @@ public class DinamicoHabilidades : MonoBehaviour
         foreach (GameObject go in itensGerados)
         {
             if (go == null) continue;
-            go.SetActive(false);   // some do layout já neste frame
+            go.SetActive(false);
             Destroy(go);
         }
         itensGerados.Clear();
     }
 
-    private void CriarItem(HabilidadeUI hab, int pontos)
+    private void CriarItemNoContainer(HabilidadeUI hab, int pontos, Transform containerPai, GameObject prefabAlvo)
     {
-        GameObject ui = Instantiate(prefabItenUI, containerItens, false);
+        GameObject ui = Instantiate(prefabAlvo, containerPai, false);
         ui.SetActive(true);
         itensGerados.Add(ui);
 
@@ -189,24 +219,34 @@ public class DinamicoHabilidades : MonoBehaviour
             hab.nomeHabilidade + " (Nv. " + nivel + ")",
             NoMaximo(hab) ? "MÁXIMO" : "Custo: " + CalcularCusto(hab));
 
-        Button botao = ui.GetComponent<Button>();
-        if (botao == null) botao = ui.GetComponentInChildren<Button>();
-        hab.botaoGerado = botao;
-
-        if (botao != null)
+        Button botaoItem = ui.GetComponent<Button>();
+        if (botaoItem == null) botaoItem = ui.GetComponentInChildren<Button>();
+        if (botaoItem != null)
         {
-            botao.interactable = podeComprar;
-
-            if (botao.targetGraphic != null)
-                botao.targetGraphic.color = SaveSystem.HabilidadeDesbloqueada(hab.id) ? corDesbloqueada : corBloqueada;
-
-            botao.onClick.RemoveAllListeners();
-            botao.onClick.AddListener(() => MelhorarHabilidade(hab));
+            botaoItem.onClick.RemoveAllListeners();
+            botaoItem.interactable = false; 
         }
 
-        // a tecla só aparece quando dá para comprar agora
-        Transform tecla = ui.transform.Find(nomeObjetoTecla);
-        if (tecla != null) tecla.gameObject.SetActive(podeComprar);
+        Transform tTecla = ui.transform.Find(nomeObjetoTecla);
+        if (tTecla != null)
+        {
+            tTecla.gameObject.SetActive(podeComprar);
+
+            if (podeComprar)
+            {
+                Button botaoTecla = tTecla.GetComponent<Button>();
+                if (botaoTecla == null)
+                {
+                    botaoTecla = tTecla.gameObject.AddComponent<Button>();
+                }
+
+                botaoTecla.interactable = true;
+                
+                HabilidadeUI atual = hab;
+                botaoTecla.onClick.RemoveAllListeners();
+                botaoTecla.onClick.AddListener(() => MelhorarHabilidade(atual));
+            }
+        }
     }
 
     private void PreencherTextos(Transform raiz, string nome, string custoTexto)
@@ -237,4 +277,6 @@ public class DinamicoHabilidades : MonoBehaviour
         if (alvo is TMP_Text tmp) tmp.text = valor;
         else if (alvo is Text legado) legado.text = valor;
     }
+
+
 }
