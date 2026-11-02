@@ -217,28 +217,60 @@ public static class SaveSystem
         }
     }
 
-    // Grava num arquivo temporário e só então troca o principal (um travamento no meio
-    // da gravação não corrompe o save). O save anterior fica guardado como .bak.
-    public static void Salvar()
+
+    // Modifica a forma como o nome do arquivo é gerado dinamicamente por slot:
+    public static string ObterCaminhoDoSlot(int slotIndex)
+    {
+        return Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
+    }
+
+    // Atualiza a função Salvar para aceitar o índice do slot (ex: 0, 1 ou 2)
+    public static void Salvar(int slotIndex = 0)
     {
         try
         {
+            string caminhoArquivo = ObterCaminhoDoSlot(slotIndex);
+            string caminhoBackup = caminhoArquivo + ".bak";
+            string caminhoTemporario = caminhoArquivo + ".tmp";
+
             string json = JsonUtility.ToJson(Atual, true);
+            File.WriteAllText(caminhoTemporario, json);
 
-            File.WriteAllText(CaminhoTemporario, json);
-
-            if (File.Exists(CaminhoDoArquivo))
+            if (File.Exists(caminhoArquivo))
             {
-                File.Copy(CaminhoDoArquivo, CaminhoDoBackup, true);
-                File.Delete(CaminhoDoArquivo);
+                File.Copy(caminhoArquivo, caminhoBackup, true);
+                File.Delete(caminhoArquivo);
             }
 
-            File.Move(CaminhoTemporario, CaminhoDoArquivo);
+            File.Move(caminhoTemporario, caminhoArquivo);
+            Debug.Log($"Jogo salvo com sucesso no Slot {slotIndex + 1}!");
         }
         catch (Exception e)
         {
             Debug.LogError("Falha ao salvar: " + e.Message);
         }
+    }
+
+    // Função para verificar se um slot específico existe
+    public static bool ExisteSlot(int slotIndex)
+    {
+        string caminho = ObterCaminhoDoSlot(slotIndex);
+        return File.Exists(caminho) || File.Exists(caminho + ".bak");
+    }
+
+    // Função para carregar um slot específico
+    public static bool CarregarSlot(int slotIndex)
+    {
+        string caminho = ObterCaminhoDoSlot(slotIndex);
+        if (TentarLer(caminho)) return true;
+
+        if (TentarLer(caminho + ".bak"))
+        {
+            Debug.LogWarning($"O save do slot {slotIndex + 1} estava inválido: carregado do backup.");
+            return true;
+        }
+
+        return false;
     }
 
     public static void ApagarSave()

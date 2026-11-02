@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 
 public class pauseManager: MonoBehaviour
 {
     public GameObject canvasMenu; //? Painel principal do menu onde aparecerar a toast.
     public GameObject loadGamePrefab; //? prefab do painel do load.
     public Transform scrollViewLoad; //? Scroll Content referente do painel do laod (loadGamePrefab).
+    public GameObject saveToast; //? Toast que aaprecerar quando o save for efetuado.
 
     public GameObject itenPrefab; //? iten que mostrara as infos do save para cada save;
 
@@ -16,13 +18,25 @@ public class pauseManager: MonoBehaviour
     public void Start()
     {
         if (loadGamePrefab != null && loadGamePrefab.scene.IsValid()) loadGamePrefab.SetActive(false);
+        if (saveToast != null && saveToast.scene.IsValid()) saveToast.SetActive(false);
         if (itenPrefab != null && itenPrefab.scene.IsValid()) itenPrefab.SetActive(false);
     }
 
-    public void openSave()
+    public void SalvarNoSlotBotao(int slotIndex)
     {
-        if (loadGamePrefab != null) loadGamePrefab.SetActive(false);
-        desenharSave();
+        SaveSystem.Salvar(slotIndex);
+        StartCoroutine(mostrarToast());
+        atualizarListaSave();
+    }
+
+    private IEnumerator mostrarToast()
+    {
+        if (saveToast != null)
+        {
+            saveToast.SetActive(true);
+            yield return new WaitForSecondsRealtime(2f);
+            saveToast.SetActive(false);
+        }
     }
 
     public void openMenuLoad()
@@ -42,16 +56,34 @@ public class pauseManager: MonoBehaviour
             return;
         }
 
-        int nuberSaves = 3;
-        for (int i=0; i < nuberSaves; i++)
+        bool temSave = SaveSystem.ExisteSave;
+        int numberSaves = temSave ? 1 : 0;
+        for (int i=0; i < 3; i++)
         {
             GameObject novoItem = Instantiate(itenPrefab, scrollViewLoad, false);
             novoItem.SetActive(true);
             itens.Add(novoItem);
             TMP_Text textoTitulo = novoItem.GetComponentInChildren<TMP_Text>();
-            if (textoTitulo != null)
+            Button botaoItem = novoItem.GetComponent<Button>();
+            int slotAtual = i;
+            if (SaveSystem.ExisteSlot(slotAtual))
             {
-                textoTitulo.text = $"Save Slot {i + 1} - Jogo Salvo";
+                if (textoTitulo != null)
+                {    
+                    textoTitulo.text = $"Slot {slotAtual + 1}: Jogo Salvo";
+                }
+                else
+                {
+                    if (textoTitulo != null) {
+                        textoTitulo.text = $"Slot {slotAtual + 1} - Vazio";
+                    }
+                }
+
+                if (botaoItem != null)
+                {
+                    botaoItem.onClick.RemoveAllListeners();
+                    botaoItem.onClick.AddListener(() => SalvarNoSlotBotao(slotAtual));
+                }
             }
         }
 

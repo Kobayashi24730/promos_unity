@@ -1278,6 +1278,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 463287468}
   m_CullTransparentMesh: 1
+--- !u!1 &489303139 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5271684444447022807, guid: bc72866be6cd57346b6aca76fdbf7e60, type: 3}
+  m_PrefabInstance: {fileID: 1837131675}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &499017069
 GameObject:
   m_ObjectHideFlags: 0
@@ -4246,9 +4251,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b34aa0b9ab144e4fb3d3e8cf7d82e94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::pauseManager
-  canvasMenu: {fileID: 0}
+  canvasMenu: {fileID: 2134693234}
   loadGamePrefab: {fileID: 1943625863}
   scrollViewLoad: {fileID: 758202065}
+  saveToast: {fileID: 489303139}
   itenPrefab: {fileID: 640441943}
 --- !u!1001 &1837131675
 PrefabInstance:
@@ -5487,12 +5493,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1832085519}
         m_TargetAssemblyTypeName: pauseManager, Assembly-CSharp
-        m_MethodName: openSave
-        m_Mode: 1
+        m_MethodName: SalvarNoSlotBotao
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
