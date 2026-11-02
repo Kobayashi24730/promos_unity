@@ -4,44 +4,59 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.Playables;
 
 public class pauseManager: MonoBehaviour
 {
     public GameObject canvasMenu; //? Painel principal do menu onde aparecerar a toast.
     public GameObject loadGamePrefab; //? prefab do painel do load.
+    public GameObject notificacao; //? prefab do toast;
     public Transform scrollViewLoad; //? Scroll Content referente do painel do laod (loadGamePrefab).
-    public GameObject saveToast; //? Toast que aaprecerar quando o save for efetuado.
-
     public GameObject itenPrefab; //? iten que mostrara as infos do save para cada save;
 
+    private const int maximoSlotSaves = 16; //? Define quantos slots maximos de saves.
+    private int slotSelecionado = -1;
     private readonly List<GameObject> itens = new List<GameObject>(); //? Lista para gurdar cada save feito pelo usuario.
     public void Start()
     {
         if (loadGamePrefab != null && loadGamePrefab.scene.IsValid()) loadGamePrefab.SetActive(false);
-        if (saveToast != null && saveToast.scene.IsValid()) saveToast.SetActive(false);
+        if (notificacao != null && notificacao.scene.IsValid()) notificacao.SetActive(false);
         if (itenPrefab != null && itenPrefab.scene.IsValid()) itenPrefab.SetActive(false);
     }
 
-    public void SalvarNoSlotBotao(int slotIndex)
+    public void SalvarNoSlotBotao()
     {
-        SaveSystem.Salvar(slotIndex);
-        StartCoroutine(mostrarToast());
-        atualizarListaSave();
-    }
-
-    private IEnumerator mostrarToast()
-    {
-        if (saveToast != null)
+        int slotDisponivel = -1;
+        for (int i = 0; i < maximoSlotSaves; i++)
         {
-            saveToast.SetActive(true);
-            yield return new WaitForSecondsRealtime(2f);
-            saveToast.SetActive(false);
+            if (!SaveSystem.ExisteSlot(i))
+            {
+                slotDisponivel = i;
+                break;
+            }
+        }
+
+        if (slotDisponivel != -1)
+        {
+            SaveSystem.Salvar(slotDisponivel);
+            if (toastNotifications.Instance != null)
+            {
+                toastNotifications.Instance.mostrarToast("Succeso ao salvar!", isErro: false);
+            }
+            atualizarListaSave();
+        } else
+        {
+            if (toastNotifications.Instance != null)
+            {
+                toastNotifications.Instance.mostrarToast("Erro ao salvar!", isErro: true);
+            }
         }
     }
 
     public void openMenuLoad()
     {
         if (loadGamePrefab != null) loadGamePrefab.SetActive(true);
+        slotSelecionado = -1;
         atualizarListaSave();
     }
 
@@ -56,34 +71,34 @@ public class pauseManager: MonoBehaviour
             return;
         }
 
-        bool temSave = SaveSystem.ExisteSave;
-        int numberSaves = temSave ? 1 : 0;
-        for (int i=0; i < 3; i++)
+        for (int i=0; i < maximoSlotSaves; i++)
         {
             GameObject novoItem = Instantiate(itenPrefab, scrollViewLoad, false);
             novoItem.SetActive(true);
             itens.Add(novoItem);
             TMP_Text textoTitulo = novoItem.GetComponentInChildren<TMP_Text>();
-            Button botaoItem = novoItem.GetComponent<Button>();
+            Button botaoItem = novoItem.GetComponentInChildren<Button>();
             int slotAtual = i;
-            if (SaveSystem.ExisteSlot(slotAtual))
-            {
-                if (textoTitulo != null)
-                {    
+
+            if (textoTitulo != null)
+            {    
+                if (SaveSystem.ExisteSlot(slotAtual))
+                {
                     textoTitulo.text = $"Slot {slotAtual + 1}: Jogo Salvo";
                 }
                 else
                 {
-                    if (textoTitulo != null) {
-                        textoTitulo.text = $"Slot {slotAtual + 1} - Vazio";
-                    }
+                    textoTitulo.text = $"Slot {slotAtual + 1} - Vazio";
                 }
+            }
 
-                if (botaoItem != null)
+            if (botaoItem != null)
+            {
+                botaoItem.onClick.RemoveAllListeners();
+                botaoItem.onClick.AddListener(() =>
                 {
-                    botaoItem.onClick.RemoveAllListeners();
-                    botaoItem.onClick.AddListener(() => SalvarNoSlotBotao(slotAtual));
-                }
+                    selecionarSlot(slotAtual);
+                });
             }
         }
 
@@ -91,6 +106,38 @@ public class pauseManager: MonoBehaviour
         if (rt != null)
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+        }
+    }
+
+    public void selecionarSlot(int index)
+    {
+        slotSelecionado = index;
+    }
+
+    public void CarregarSlotEspecifico()
+    {
+        if (slotSelecionado == -1)
+        {
+            if (toastNotifications.Instance != null)
+            {
+
+                toastNotifications.Instance.mostrarToast("Slot não selecionado!", isErro: false);
+            }
+            return;
+        }
+        if (SaveSystem.ExisteSlot(slotSelecionado))
+        {
+            SaveSystem.CarregarSlot(slotSelecionado);
+            if (toastNotifications.Instance != null)
+            {
+                toastNotifications.Instance.mostrarToast("Sucesso ao carregar o jogo!", isErro: false);
+            }
+        } else
+        {
+            if (toastNotifications.Instance != null)
+            {            
+                toastNotifications.Instance.mostrarToast("Slot vazios!", isErro: false);
+            }
         }
     }
 
@@ -104,11 +151,6 @@ public class pauseManager: MonoBehaviour
             }
         }
         itens.Clear();
-    }
-
-    public void desenharSave()
-    {
-        
     }
 
     public void ExitGame()
