@@ -20,7 +20,6 @@ public class pauseManager: MonoBehaviour
     public void Start()
     {
         if (loadGamePrefab != null && loadGamePrefab.scene.IsValid()) loadGamePrefab.SetActive(false);
-        if (notificacao != null && notificacao.scene.IsValid()) notificacao.SetActive(false);
         if (itenPrefab != null && itenPrefab.scene.IsValid()) itenPrefab.SetActive(false);
     }
 
