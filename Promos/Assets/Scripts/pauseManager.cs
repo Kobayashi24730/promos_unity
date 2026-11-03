@@ -41,14 +41,14 @@ public class pauseManager: MonoBehaviour
             SaveSystem.Salvar(slotDisponivel);
             if (toastNotifications.Instance != null)
             {
-                toastNotifications.Instance.mostrarToast("Succeso ao salvar!", isErro: false);
+                dispararToast("Succeso ao salvar!", isErro: false);
             }
             atualizarListaSave();
         } else
         {
             if (toastNotifications.Instance != null)
             {
-                toastNotifications.Instance.mostrarToast("Erro ao salvar!", isErro: true);
+                dispararToast("Erro ao salvar!", isErro: true);
             }
         }
     }
@@ -121,7 +121,7 @@ public class pauseManager: MonoBehaviour
             if (toastNotifications.Instance != null)
             {
 
-                toastNotifications.Instance.mostrarToast("Slot não selecionado!", isErro: false);
+                dispararToast("Slot não selecionado!", isErro: false);
             }
             return;
         }
@@ -130,13 +130,14 @@ public class pauseManager: MonoBehaviour
             SaveSystem.CarregarSlot(slotSelecionado);
             if (toastNotifications.Instance != null)
             {
-                toastNotifications.Instance.mostrarToast("Sucesso ao carregar o jogo!", isErro: false);
+                Debug.Log("Chegou aqui.");
+                dispararToast("Sucesso ao carregar o jogo!", isErro: false);
             }
         } else
         {
             if (toastNotifications.Instance != null)
             {            
-                toastNotifications.Instance.mostrarToast("Slot vazios!", isErro: false);
+                dispararToast("Slot vazios!", isErro: false);
             }
         }
     }
@@ -151,6 +152,22 @@ public class pauseManager: MonoBehaviour
             }
         }
         itens.Clear();
+    }
+
+    public void dispararToast(string message, bool isErro)
+    {
+        if (toastNotifications.Instance != null)
+        {
+            StopAllCoroutines();
+            StartCoroutine(rotinaControlarToast(message, isErro));
+        }
+    }
+
+    private IEnumerator rotinaControlarToast(string message, bool isErro)
+    {
+        toastNotifications.Instance.mostrarToast(message, isErro);
+        yield return new WaitForSecondsRealtime(2f);
+        toastNotifications.Instance.esconderToast();
     }
 
     public void ExitGame()

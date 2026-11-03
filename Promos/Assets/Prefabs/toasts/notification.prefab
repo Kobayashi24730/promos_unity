@@ -119,6 +119,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0388785443dbe6346a6f6cb03430e197, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::toastNotifications
+  painelToast: {fileID: 4786012166069267209}
   textoMessagem: {fileID: 3979148708410373135}
   fundoToast: {fileID: 2582538877640766112}
   corSucesso: {r: 0.1, g: 0.6, b: 0.2, a: 1}

@@ -1,11 +1,11 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System.Collections;
 
 public class toastNotifications : MonoBehaviour
 {
     public static toastNotifications Instance;
+    public GameObject painelToast;
     public TMP_Text textoMessagem;
     public Image fundoToast;
 
@@ -17,30 +17,42 @@ public class toastNotifications : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
-        } else
+        }
+        else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
     }
-    public void mostrarToast(string message, bool isErro, float duracao = 2f)
-    {
-        StopAllCoroutines();
-        StartCoroutine(rotinaExibirToast(message, isErro, duracao));
-    }
 
-    public IEnumerator rotinaExibirToast(string message, bool isErro, float duracao)
+    public void mostrarToast(string message, bool isErro)
     {
+        Debug.Log("Toast executado visualmente com a mensagem: " + message);
+
+        // Garante que o GameObject principal e o painel ligam
+        gameObject.SetActive(true);
+        if (painelToast != null)
+        {
+            painelToast.SetActive(true);
+        }
+
         if (textoMessagem != null)
         {
             textoMessagem.text = message;
         }
+
         if (fundoToast != null)
         {
             fundoToast.color = isErro ? corErro : corSucesso;
         }
-        transform.root.gameObject.SetActive(true);
-        yield return new WaitForSecondsRealtime(duracao);
-        transform.root.gameObject.SetActive(false);
+    }
+
+    public void esconderToast()
+    {
+        if (painelToast != null) 
+        {
+            painelToast.SetActive(false);
+        }
+        gameObject.SetActive(false);
     }
 }
